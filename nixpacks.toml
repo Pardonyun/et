@@ -1,5 +1,0 @@
-[phases.setup]
-nixPkgs = ["nodejs", "openssl"]
-
-[phases.build]
-cmds = ["npm install", "npm run install:client", "npm run build"]
