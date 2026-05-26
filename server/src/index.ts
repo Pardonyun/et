@@ -28,19 +28,12 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// 静态文件服务
+// 静态文件服务 + SPA fallback
 const clientDist = path.join(__dirname, '../../client/dist');
-const fs = require('fs');
-if (fs.existsSync(clientDist)) {
-  app.use(express.static(clientDist));
-  // SPA fallback：非 /api 路径且非文件请求才返回 index.html
-  app.get('*', (_req, res, next) => {
-    if (_req.path.startsWith('/api')) return next();
-    const filePath = path.join(clientDist, _req.path);
-    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) return next();
-    res.sendFile(path.join(clientDist, 'index.html'));
-  });
-}
+app.use(express.static(clientDist, { index: false }));
+app.get(/^(?!\/api).*/, (_req, res) => {
+  res.sendFile(path.join(clientDist, 'index.html'));
+});
 
 // 错误处理
 app.use(errorHandler);
