@@ -33,8 +33,11 @@ const clientDist = path.join(__dirname, '../../client/dist');
 const fs = require('fs');
 if (fs.existsSync(clientDist)) {
   app.use(express.static(clientDist));
+  // SPA fallback：非 /api 路径且非文件请求才返回 index.html
   app.get('*', (_req, res, next) => {
     if (_req.path.startsWith('/api')) return next();
+    const filePath = path.join(clientDist, _req.path);
+    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) return next();
     res.sendFile(path.join(clientDist, 'index.html'));
   });
 }
