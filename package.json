@@ -4,10 +4,10 @@
   "scripts": {
     "install:client": "cd client && npm install",
     "dev": "concurrently -n server,client -c blue,green \"npx tsx server/src/index.ts\" \"cd client && npx vite\"",
-    "build": "npm run db:generate && npm run build:server && npm run install:client && npm run build:client && npm run db:push",
+    "build": "npm run db:generate && npm run build:server && npm run install:client && npm run build:client",
     "build:server": "npx tsc -p server/tsconfig.json",
     "build:client": "cd client && npx vite build",
-    "start": "node server/dist/index.js",
+    "start": "npm run db:push && node server/dist/index.js",
     "db:generate": "npx prisma generate --schema=server/src/prisma/schema.prisma",
     "db:push": "npx prisma db push --schema=server/src/prisma/schema.prisma --accept-data-loss",
     "db:seed": "npx tsx server/src/prisma/seed.ts"
