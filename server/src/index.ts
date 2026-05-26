@@ -29,6 +29,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/annual', annualRoutes);
 app.use('/api/monthly', monthlyRoutes);
 
+// 测试页面 — 验证服务器可达
+app.get('/test', (_req, res) => {
+  res.send('<html><body><h1 style="color:blue;padding:40px">服务器运行正常!</h1><p>如果你看到这个页面，说明 Railway 路由配置正确。</p><p>请访问 <a href="/">首页</a></p></body></html>');
+});
+
 // 健康检查
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
