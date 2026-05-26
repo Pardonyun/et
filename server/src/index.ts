@@ -28,11 +28,17 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// 静态文件服务 + SPA fallback
+// 静态文件服务
 const clientDist = path.join(__dirname, '../../client/dist');
-app.use(express.static(clientDist, { index: false }));
-app.get(/^(?!\/api).*/, (_req, res) => {
-  res.sendFile(path.join(clientDist, 'index.html'));
+app.use(express.static(clientDist));
+app.get('*', (req, res, next) => {
+  // 只拦截非 API 请求
+  if (req.path.startsWith('/api') || req.path.startsWith('/socket.io')) {
+    return next();
+  }
+  res.sendFile(path.join(clientDist, 'index.html'), (err) => {
+    if (err) next(); // 文件不存在则跳过
+  });
 });
 
 // 错误处理

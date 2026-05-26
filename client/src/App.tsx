@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
+import { theme } from './theme';
 import AppLayout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -14,7 +15,7 @@ import MonthlyTradingPage from './pages/monthly/MonthlyTradingPage';
 
 export default function App() {
   return (
-    <ConfigProvider>
+    <ConfigProvider theme={theme}>
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
