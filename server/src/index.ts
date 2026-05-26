@@ -29,33 +29,33 @@ app.use('/api/auth', authRoutes);
 app.use('/api/annual', annualRoutes);
 app.use('/api/monthly', monthlyRoutes);
 
-// 测试页面 — 验证服务器可达
-app.get('/test', (_req, res) => {
-  res.send('<html><body><h1 style="color:blue;padding:40px">服务器运行正常!</h1><p>如果你看到这个页面，说明 Railway 路由配置正确。</p><p>请访问 <a href="/">首页</a></p></body></html>');
+// 静态文件服务
+const publicDir = path.join(__dirname, 'public');
+const fs = require('fs');
+const indexPath = path.join(publicDir, 'index.html');
+const indexContent = fs.readFileSync(indexPath, 'utf-8');
+console.log('index.html loaded, size:', indexContent.length);
+
+app.use('/assets', express.static(path.join(publicDir, 'assets')));
+
+// 首页 — 直接返回 index.html
+app.get('/', (_req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(indexContent);
+});
+
+// SPA 路由 — 其他非 API 路径返回 index.html
+app.get('*', (req, res, next) => {
+  if (req.path === '/' || req.path.startsWith('/api') || req.path.startsWith('/socket.io')) {
+    return next();
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(indexContent);
 });
 
 // 健康检查
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// 静态文件服务
-const publicDir = path.join(__dirname, 'public');
-const fs = require('fs');
-console.log('__dirname:', __dirname);
-console.log('publicDir:', publicDir);
-console.log('publicDir exists:', fs.existsSync(publicDir));
-if (fs.existsSync(publicDir)) {
-  console.log('files:', fs.readdirSync(publicDir).join(', '));
-}
-app.use(express.static(publicDir));
-app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/api') || req.path.startsWith('/socket.io')) {
-    return next();
-  }
-  res.sendFile(path.join(publicDir, 'index.html'), (err) => {
-    if (err) next();
-  });
 });
 
 // 错误处理
