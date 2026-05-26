@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  role      String   // GENERATOR | SELLER | EXCHANGE
+  createdAt DateTime @default(now())
+
+  generatorProfile GeneratorProfile?
+  sellerProfile    SellerProfile?
+  annualBids       AnnualBid[]
+  annualClearingResults AnnualClearingResult[]
+  monthlyListings  MonthlyListing[]
+  matchesAsBuyer   MonthlyMatch[]  @relation("Buyer")
+  matchesAsSeller  MonthlyMatch[]  @relation("Seller")
+  transactions     Transaction[]
+
+  @@map("users")
+}
+
+model GeneratorProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName String
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  units        GeneratorUnit[]
+
+  @@map("generator_profiles")
+}
+
+model GeneratorUnit {
+  id           String   @id @default(uuid())
+  profileId    String
+  profile      GeneratorProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  type         String   // 水电 | 火电 | 风电 | 光伏 | 核电
+  capacityMW   Float
+  marginalCost Float    // 边际成本 (元/MWh)
+  createdAt    DateTime @default(now())
+
+  @@map("generator_units")
+}
+
+model SellerProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName String
+  loadMW      Float    // 总负荷 (MW)
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@map("seller_profiles")
+}
+
+model AnnualTrade {
+  id         String   @id @default(uuid())
+  name       String
+  exchangeId String
+  status     String   @default("PENDING") // PENDING | OPEN | CLOSED | CLEARED
+  deadlineAt DateTime?
+  startedAt  DateTime?
+  closedAt   DateTime?
+  createdAt  DateTime @default(now())
+
+  bids            AnnualBid[]
+  clearingResults AnnualClearingResult[]
+
+  @@map("annual_trades")
+}
+
+model AnnualBid {
+  id          String   @id @default(uuid())
+  tradeId     String
+  trade       AnnualTrade @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  segments    String   // JSON: [{"volume":100,"price":350},...] 最多3段
+  submittedAt DateTime @default(now())
+
+  @@unique([tradeId, userId])
+  @@map("annual_bids")
+}
+
+model AnnualClearingResult {
+  id            String @id @default(uuid())
+  annualTradeId String
+  annualTrade   AnnualTrade @relation(fields: [annualTradeId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clearedVolume Float
+  clearingPrice Float
+  createdAt     DateTime @default(now())
+
+  @@unique([annualTradeId, userId])
+  @@map("annual_clearing_results")
+}
+
+model MonthlyTrade {
+  id             String   @id @default(uuid())
+  name           String
+  exchangeId     String
+  annualTradeId  String
+  status         String   @default("PENDING") // PENDING | ACTIVE | CLOSED
+  phase          String   @default("PRE_LISTING") // PRE_LISTING | MATCHING | NEGOTIATION | CLOSED
+  phaseStartedAt DateTime?
+  phaseEndsAt    DateTime?
+  createdAt      DateTime @default(now())
+  closedAt       DateTime?
+
+  listings    MonthlyListing[]
+  matches     MonthlyMatch[]
+  transactions Transaction[]
+
+  @@map("monthly_trades")
+}
+
+model MonthlyListing {
+  id          String   @id @default(uuid())
+  tradeId     String
+  trade       MonthlyTrade @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  side        String   // BUY | SELL
+  period      String   // PEAK | FLAT | VALLEY
+  volumeMW    Float
+  remainingMW Float
+  price       Float
+  status      String   @default("ACTIVE") // ACTIVE | PARTIALLY_FILLED | FILLED | CANCELLED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bidMatches MonthlyMatch[] @relation("BidListing")
+  askMatches MonthlyMatch[] @relation("AskListing")
+  transactions Transaction[]
+
+  @@map("monthly_listings")
+}
+
+model MonthlyMatch {
+  id           String   @id @default(uuid())
+  tradeId      String
+  trade        MonthlyTrade @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  period       String   // PEAK | FLAT | VALLEY
+  bidListingId String
+  bidListing   MonthlyListing @relation("BidListing", fields: [bidListingId], references: [id], onDelete: Cascade)
+  askListingId String
+  askListing   MonthlyListing @relation("AskListing", fields: [askListingId], references: [id], onDelete: Cascade)
+  buyerId      String
+  buyer        User     @relation("Buyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  sellerId     String
+  seller       User     @relation("Seller", fields: [sellerId], references: [id], onDelete: Cascade)
+  volumeMW     Float
+  price        Float    // 成交价 = 先挂方价格
+  matchedAt    DateTime @default(now())
+
+  @@map("monthly_matches")
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  tradeId   String
+  trade     MonthlyTrade @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  listingId String
+  listing   MonthlyListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  takerId   String              // 摘牌方
+  taker     User   @relation(fields: [takerId], references: [id], onDelete: Cascade)
+  volumeMW  Float
+  price     Float               // 挂单价
+  createdAt DateTime @default(now())
+
+  @@map("transactions")
+}
