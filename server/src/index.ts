@@ -18,6 +18,12 @@ const prisma = new PrismaClient();
 app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json());
 
+// 请求日志
+app.use((req, _res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
+
 // API 路由
 app.use('/api/auth', authRoutes);
 app.use('/api/annual', annualRoutes);
@@ -30,6 +36,13 @@ app.get('/api/health', (_req, res) => {
 
 // 静态文件服务
 const publicDir = path.join(__dirname, 'public');
+const fs = require('fs');
+console.log('__dirname:', __dirname);
+console.log('publicDir:', publicDir);
+console.log('publicDir exists:', fs.existsSync(publicDir));
+if (fs.existsSync(publicDir)) {
+  console.log('files:', fs.readdirSync(publicDir).join(', '));
+}
 app.use(express.static(publicDir));
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api') || req.path.startsWith('/socket.io')) {
