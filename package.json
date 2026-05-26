@@ -4,12 +4,12 @@
   "scripts": {
     "install:client": "cd client && npm install",
     "dev": "concurrently -n server,client -c blue,green \"npx tsx server/src/index.ts\" \"cd client && npx vite\"",
-    "build": "npm run db:generate && npm run build:server && npm run install:client && npm run build:client",
+    "build": "npm run db:generate && npm run build:server && npm run install:client && npm run build:client && npm run db:push:maybe",
     "build:server": "npx tsc -p server/tsconfig.json",
     "build:client": "cd client && npx vite build",
     "start": "node server/dist/index.js",
     "db:generate": "npx prisma generate --schema=server/src/prisma/schema.prisma",
-    "db:push": "npx prisma db push --schema=server/src/prisma/schema.prisma --accept-data-loss",
+    "db:push:maybe": "node -e \"if(process.env.DATABASE_URL){require('child_process').execSync('npx prisma db push --schema=server/src/prisma/schema.prisma --accept-data-loss',{stdio:'inherit'})}else{console.log('DATABASE_URL not set, skipping db push')}\"",
     "db:seed": "npx tsx server/src/prisma/seed.ts"
   },
   "dependencies": {

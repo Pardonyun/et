@@ -2,7 +2,6 @@ import express from 'express';
 import http from 'http';
 import cors from 'cors';
 import path from 'path';
-import { execSync } from 'child_process';
 import { PrismaClient } from '@prisma/client';
 import { config } from './config';
 import { initSocket } from './socket';
@@ -14,25 +13,6 @@ import monthlyRoutes from './routes/monthly';
 const app = express();
 const server = http.createServer(app);
 const prisma = new PrismaClient();
-
-// 自动初始化数据库
-async function initDatabase() {
-  if (config.databaseUrl) {
-    try {
-      console.log('正在同步数据库...');
-      execSync(
-        'npx prisma db push --schema=server/src/prisma/schema.prisma --accept-data-loss --skip-generate',
-        { stdio: 'pipe', timeout: 30000 },
-      );
-      console.log('数据库同步完成');
-      await prisma.$connect();
-      console.log('数据库连接成功');
-    } catch (err: any) {
-      console.error('数据库初始化失败:', err.message);
-      console.log('将以无数据库模式运行（仅提供静态页面）');
-    }
-  }
-}
 
 // 中间件
 app.use(cors({ origin: '*', credentials: true }));
@@ -68,14 +48,11 @@ app.use(errorHandler);
 initSocket(server, prisma);
 
 // 启动
-async function start() {
-  await initDatabase();
-  server.listen(config.port, () => {
-    console.log(`电力中长期交易系统启动，端口: ${config.port}`);
-    console.log(`环境: ${config.nodeEnv}`);
-  });
-}
-start();
+server.listen(config.port, () => {
+  console.log(`电力中长期交易系统启动，端口: ${config.port}`);
+  console.log(`环境: ${config.nodeEnv}`);
+  console.log(`数据库: ${config.databaseUrl ? '已配置' : '未配置'}`);
+});
 
 // 优雅退出
 process.on('SIGTERM', async () => {
