@@ -58,8 +58,8 @@ export default function CompaniesPage() {
     {
       title: '发电方式', key: 'types',
       render: (_: any, r: any) => {
-        const types = [...new Set((r.units || []).map((u: any) => u.type))];
-        return types.map((t: string) => <Tag key={t} color="blue">{t}</Tag>);
+        const types: string[] = [...new Set((r.units || []).map((u: any) => u.type))] as string[];
+        return types.map((t) => <Tag key={t} color="blue">{t}</Tag>);
       },
     },
     {
