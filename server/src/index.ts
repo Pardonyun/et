@@ -30,6 +30,14 @@ app.get('/api/health', (_req, res) => {
 
 // 静态文件服务
 const clientDist = path.join(__dirname, '../../client/dist');
+console.log('静态文件目录:', clientDist);
+try {
+  const fs = require('fs');
+  const files = fs.readdirSync(clientDist);
+  console.log('client/dist 文件列表:', files.join(', '));
+} catch (e: any) {
+  console.error('client/dist 不可访问:', e.message);
+}
 app.use(express.static(clientDist));
 app.get('*', (req, res, next) => {
   // 只拦截非 API 请求
