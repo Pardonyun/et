@@ -28,11 +28,13 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// 静态文件服务（生产环境）
-if (config.nodeEnv === 'production') {
-  const clientDist = path.join(__dirname, '../../client/dist');
+// 静态文件服务
+const clientDist = path.join(__dirname, '../../client/dist');
+const fs = require('fs');
+if (fs.existsSync(clientDist)) {
   app.use(express.static(clientDist));
-  app.get('*', (_req, res) => {
+  app.get('*', (_req, res, next) => {
+    if (_req.path.startsWith('/api')) return next();
     res.sendFile(path.join(clientDist, 'index.html'));
   });
 }
