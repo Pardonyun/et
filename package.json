@@ -1,31 +1,24 @@
 {
   "name": "electricity-trading",
   "private": true,
+  "workspaces": [
+    "server",
+    "client"
+  ],
   "scripts": {
-    "install:client": "cd client && npm install",
-    "dev": "concurrently -n server,client -c blue,green \"npx tsx server/src/index.ts\" \"cd client && npx vite\"",
-    "build": "npm run db:generate && npm run build:server && npm run install:client && npm run build:client && npm run db:push:maybe",
-    "build:server": "npx tsc -p server/tsconfig.json",
-    "build:client": "cd client && npx vite build",
+    "dev": "concurrently -n server,client -c blue,green \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build:server && npm run build:client",
+    "build:server": "npm run build -w server",
+    "build:client": "npm run build -w client",
     "start": "node server/dist/index.js",
-    "db:generate": "npx prisma generate --schema=server/src/prisma/schema.prisma",
-    "db:push:maybe": "node -e \"if(process.env.DATABASE_URL){require('child_process').execSync('npx prisma db push --schema=server/src/prisma/schema.prisma --accept-data-loss',{stdio:'inherit'})}else{console.log('DATABASE_URL not set, skipping db push')}\"",
-    "db:seed": "npx tsx server/src/prisma/seed.ts"
-  },
-  "dependencies": {
-    "@prisma/client": "^6.4.1",
-    "cors": "^2.8.5",
-    "dotenv": "^16.6.1",
-    "express": "^4.21.2",
-    "socket.io": "^4.8.1"
+    "db:migrate": "npm run db:migrate -w server",
+    "db:push": "npm run db:push -w server",
+    "db:seed": "npm run db:seed -w server"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.25",
-    "@types/node": "^22.13.4",
-    "concurrently": "^9.1.0",
-    "prisma": "^6.4.1",
-    "tsx": "^4.22.0",
-    "typescript": "^5.7.3"
+    "concurrently": "^9.1.0"
+  },
+  "dependencies": {
+    "tslib": "^2.8.1"
   }
 }
