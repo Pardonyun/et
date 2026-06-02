@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Layout as AntLayout, Menu, Button, Avatar, Dropdown, Typography } from 'antd';
 import {
   DashboardOutlined,
@@ -34,8 +34,7 @@ export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
 
   if (!user) {
-    navigate('/login');
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
   const isExchange = user.role === 'EXCHANGE';
