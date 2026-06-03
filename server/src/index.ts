@@ -2,7 +2,7 @@ import express from 'express';
 import http from 'http';
 import cors from 'cors';
 import path from 'path';
-import { PrismaClient } from '@prisma/client';
+import prisma from './prisma/client';
 import { config } from './config';
 import { initSocket } from './socket';
 import { errorHandler } from './middleware/errorHandler';
@@ -12,7 +12,6 @@ import monthlyRoutes from './routes/monthly';
 
 const app = express();
 const server = http.createServer(app);
-const prisma = new PrismaClient();
 
 // 中间件
 app.use(cors({ origin: '*', credentials: true }));

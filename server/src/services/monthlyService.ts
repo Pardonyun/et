@@ -1,10 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prisma/client';
 import { startMatchingPhase, advancePhase } from '../engine/phaseScheduler';
 import { computeConstraints } from './constraintService';
 import { matchOrder, takeListing } from '../engine/matchingEngine';
 import { broadcastToMonthlyRoom } from '../socket';
-
-const prisma = new PrismaClient();
 
 export async function deleteMonthlyTrade(tradeId: string) {
   const trade = await prisma.monthlyTrade.findUnique({ where: { id: tradeId } });

@@ -9,8 +9,7 @@ function getUserId(req: Request): string {
 }
 
 async function requireNotExchange(req: Request, res: Response): Promise<boolean> {
-  const { PrismaClient } = require('@prisma/client');
-  const prisma = new PrismaClient();
+  const prisma = require('../prisma/client').default;
   const userId = getUserId(req);
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (user?.role === 'EXCHANGE') {
@@ -47,9 +46,7 @@ router.get('/', async (_req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const userId = getUserId(req);
-    // 从数据库获取角色
-    const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
+    const prisma = require('../prisma/client').default;
     const user = await prisma.user.findUnique({ where: { id: userId } });
     const trade = await monthlyService.getMonthlyTradeDetail(req.params.id, userId, user?.role || '');
     if (!trade) { res.status(404).json({ error: '交易不存在' }); return; }
@@ -77,8 +74,7 @@ router.post('/:id/next-phase', async (req: Request, res: Response) => {
 router.get('/:id/listings', async (req: Request, res: Response) => {
   try {
     const userId = getUserId(req);
-    const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
+    const prisma = require('../prisma/client').default;
     const user = await prisma.user.findUnique({ where: { id: userId } });
     const listings = await monthlyService.getListingsForTrade(req.params.id, userId, user?.role || '');
     res.json(listings);
@@ -148,8 +144,7 @@ router.get('/:id/transactions', async (req: Request, res: Response) => {
 router.get('/:id/constraints', async (req: Request, res: Response) => {
   try {
     const { computeConstraints } = require('../services/constraintService');
-    const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
+    const prisma = require('../prisma/client').default;
     const constraints = await computeConstraints(prisma, req.params.id, getUserId(req));
     res.json(constraints);
   } catch (err: any) { res.status(400).json({ error: err.message }); }

@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prisma/client';
 import { clearAnnualTrade } from '../engine/clearingEngine';
 import { broadcastToAnnualRoom } from '../socket';
-
-const prisma = new PrismaClient();
 
 export async function deleteAnnualTrade(tradeId: string) {
   const trade = await prisma.annualTrade.findUnique({ where: { id: tradeId } });

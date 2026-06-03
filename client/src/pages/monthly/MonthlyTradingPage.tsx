@@ -53,18 +53,18 @@ export default function MonthlyTradingPage() {
     if (!id) return;
     setLoading(true);
     try {
-      const [tradeRes, listingRes, matchRes, transRes, curveRes] = await Promise.all([
+      const results = await Promise.allSettled([
         monthlyApi.getDetail(id),
         monthlyApi.getListings(id),
         monthlyApi.getMatches(id),
         monthlyApi.getTransactions(id),
-        monthlyApi.getCurves(id).catch(() => ({ data: {} })),
+        monthlyApi.getCurves(id),
       ]);
-      setTrade(tradeRes.data);
-      setListings(listingRes.data);
-      setMatches(matchRes.data);
-      setTransactions(transRes.data);
-      setCurves(curveRes.data || {});
+      if (results[0].status === 'fulfilled') setTrade(results[0].value.data);
+      if (results[1].status === 'fulfilled') setListings(results[1].value.data);
+      if (results[2].status === 'fulfilled') setMatches(results[2].value.data);
+      if (results[3].status === 'fulfilled') setTransactions(results[3].value.data);
+      if (results[4].status === 'fulfilled') setCurves(results[4].value.data || {});
     } catch { /* ignore */ }
     setLoading(false);
   }, [id]);
